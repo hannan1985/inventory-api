@@ -1,4 +1,4 @@
-use axum::{Json, Router, routing::get};
+use axum::{ routing::get, Json, Router };
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -18,25 +18,21 @@ async fn health() -> Json<Health> {
 
 #[tokio::main]
 async fn main() {
-    let app: Router = Router::new()
-        .route("/health", get(health))
-        .route("/version", get(version));
+    let app: Router = Router::new().route("/health", get(health)).route("/version", get(version));
 
-    let listener = tokio::net::TcpListener::bind("localhost:3000")
-        .await
+    let listener = tokio::net::TcpListener
+        ::bind("localhost:3000").await
         .expect("Failed to bind to address localhost:3000");
 
     println!("Server running on http://localhost:3000");
 
-    axum::serve(listener, app)
-        .await
-        .expect("Failed to serve application");
+    axum::serve(listener, app).await.expect("Failed to serve application");
 }
 
 async fn version() -> Json<InventoryApi> {
     let inventorya_api: InventoryApi = InventoryApi {
         name: "inventory-api".to_string(),
-        version: "1.0.0".to_string(),
+        version: "0.1.0".to_string(),
     };
     Json(inventorya_api)
 }
