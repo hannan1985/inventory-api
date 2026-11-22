@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:17            # official Postgres image, version 17
+    environment:
+      POSTGRES_USER: inventory    # must match the user in your .env
+      POSTGRES_PASSWORD: inventory
+      POSTGRES_DB: inventory
+    ports:
+      - "5432:5432"               # your machine's port : the container's port
+    volumes:
+      - pgdata:/var/lib/postgresql/data   # keep data when the container restarts
+
+volumes:
+  pgdata:                         # declares the named volume used above
