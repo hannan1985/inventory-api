@@ -108,3 +108,56 @@ pub struct MovementResult {
     pub movement: Movement,
     pub new_quantity: i32,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn item(sku: &str, name: &str, quantity: i32) -> NewItem {
+        NewItem {
+            sku: sku.into(),
+            name: name.into(),
+            quantity,
+        }
+    }
+
+    #[test]
+    fn valid_item_is_trimmed() {
+        let item = item("  ABC-1 ", " Widget ", 3).validate().unwrap();
+        assert_eq!(item.sku, "ABC-1");
+        assert_eq!(item.name, "Widget");
+    }
+
+    #[test]
+    fn rejects_bad_items() {
+        assert!(item("", "x", 0).validate().is_err());
+        assert!(item("A", "   ", 0).validate().is_err());
+        assert!(item("A B", "x", 0).validate().is_err());
+        assert!(item(&"A".repeat(65), "x", 0).validate().is_err());
+        assert!(item("A", "x", -1).validate().is_err());
+    }
+
+    #[test]
+    fn movement_quantity_must_be_positive() {
+        let m = |q| NewMovement {
+            kind: MovementKind::Issue,
+            quantity: q,
+            note: None,
+        };
+        assert!(m(0).validate().is_err());
+        assert!(m(-1).validate().is_err());
+        assert!(m(1).validate().is_ok());
+    }
+
+    #[test]
+    fn blank_note_becomes_none() {
+        let m = NewMovement {
+            kind: MovementKind::Receive,
+            quantity: 1,
+            note: Some("   ".into()),
+        }
+        .validate()
+        .unwrap();
+        assert_eq!(m.note, None);
+    }
+}
