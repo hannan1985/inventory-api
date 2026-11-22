@@ -10,5 +10,12 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data   # keep data when the container restarts
 
+  mosquitto:
+    image: eclipse-mosquitto:2    # MQTT broker
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+
 volumes:
   pgdata:                         # declares the named volume used above

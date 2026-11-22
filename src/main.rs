@@ -1,4 +1,4 @@
-use inventory_api::{AppState, app};
+use inventory_api::{AppState, app, events::EventPublisher};
 use sqlx::postgres::PgPoolOptions;
 use tracing_subscriber::EnvFilter;
 
@@ -22,9 +22,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     sqlx::migrate!().run(&pool).await?;
 
+    let events = match std::env::var("MQTT_HOST") {
+        Ok(host) => {
+            let port = std::env::var("MQTT_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(1883);
+            tracing::info!("publishing events to mqtt://{host}:{port}");
+            EventPublisher::connect(&host, port)
+        }
+        Err(_) => {
+            tracing::info!("MQTT_HOST not set, events are disabled");
+            EventPublisher::disabled()
+        }
+    };
+
     let listener = tokio::net::TcpListener::bind(&bind_addr).await?;
     tracing::info!("Server running on http://{bind_addr}");
 
-    axum::serve(listener, app(AppState { pool })).await?;
+    axum::serve(listener, app(AppState { pool, events })).await?;
     Ok(())
 }

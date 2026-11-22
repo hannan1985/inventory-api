@@ -176,6 +176,9 @@ async fn create_movement(
 
     tx.commit().await?;
 
+    // Only after the commit: never announce a movement that was rolled back.
+    state.events.movement_recorded(&movement, new_quantity);
+
     tracing::info!(sku = %sku, kind = ?movement.kind, quantity = movement.quantity, new_quantity, "stock movement");
 
     Ok((
